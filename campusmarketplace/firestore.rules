@@ -1,0 +1,20 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // User profiles: Anyone can view seller profiles; only owner can edit their own profile
+    match /users/{userId} {
+      allow read: if true;
+      allow create, update, delete: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Listings: Anyone can view active listings; only seller can create, update, delete their own listings
+    match /listings/{listingId} {
+      allow read: if true;
+      allow create: if request.auth != null
+                    && request.resource.data.sellerId == request.auth.uid;
+      allow update, delete: if request.auth != null
+                    && resource.data.sellerId == request.auth.uid;
+    }
+  }
+}
