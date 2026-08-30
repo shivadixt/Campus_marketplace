@@ -80,9 +80,18 @@ class MyProfileScreen extends ConsumerWidget {
 
             // Listings stats
             List<Listing> allListings = [];
-            if (authUser != null) {
-              final listingsAsync = ref.watch(userListingsProvider(authUser.uid));
-              allListings = listingsAsync.value ?? [];
+            String currentUserId = '';
+            if (profile != null) {
+              currentUserId = profile.id;
+            } else if (authUser != null) {
+              currentUserId = authUser.uid;
+            }
+
+            if (currentUserId.isNotEmpty) {
+              final listingsAsync = ref.watch(userListingsProvider(currentUserId));
+              if (listingsAsync.value != null) {
+                allListings = listingsAsync.value!;
+              }
             }
 
             int activeCount = 0;

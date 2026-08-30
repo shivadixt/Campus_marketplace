@@ -8,7 +8,14 @@ class StorageService {
   final FirebaseStorage _storage;
 
   StorageService({FirebaseStorage? storage})
-      : _storage = storage ?? FirebaseStorage.instance;
+      : _storage = _resolveStorage(storage);
+
+  static FirebaseStorage _resolveStorage(FirebaseStorage? storage) {
+    if (storage != null) {
+      return storage;
+    }
+    return FirebaseStorage.instance;
+  }
 
   // Upload listing photos
   Future<List<String>> uploadListingImages({

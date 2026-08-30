@@ -7,23 +7,29 @@ final authRepositoryProvider = Provider<AuthRepository>((ref) {
   return AuthRepository();
 });
 
-/// Stream provider for Firebase Auth user state
+// Stream provider for Firebase Auth user state
 final authStateProvider = StreamProvider<User?>((ref) {
   final repo = ref.watch(authRepositoryProvider);
   return repo.authStateChanges;
 });
 
-/// Stream provider for current logged-in user profile from Firestore
+// Stream provider for active student profile
 final currentUserProfileProvider = StreamProvider<UserProfile?>((ref) {
-  final authUser = ref.watch(authStateProvider).value;
-  if (authUser == null) {
-    return Stream.value(null);
-  }
   final repo = ref.watch(authRepositoryProvider);
-  return repo.watchUserProfile(authUser.uid);
+  final authUser = ref.watch(authStateProvider).value;
+
+  if (repo.currentDemoProfile != null) {
+    return repo.watchUserProfile(repo.currentDemoProfile!.id);
+  }
+
+  if (authUser != null) {
+    return repo.watchUserProfile(authUser.uid);
+  }
+
+  return Stream.value(null);
 });
 
-/// Provider for fetching any seller's profile by ID
+// Provider for fetching any seller's profile by ID
 final userProfileProvider = FutureProvider.family<UserProfile?, String>((ref, userId) async {
   final repo = ref.watch(authRepositoryProvider);
   return repo.getUserProfile(userId);

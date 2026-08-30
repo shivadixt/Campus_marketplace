@@ -27,8 +27,11 @@ class ListingDetailScreen extends ConsumerWidget {
     }
 
     String currentUserId = '';
+    final profile = ref.watch(currentUserProfileProvider).value;
     final authUser = ref.watch(authStateProvider).value;
-    if (authUser != null) {
+    if (profile != null) {
+      currentUserId = profile.id;
+    } else if (authUser != null) {
       currentUserId = authUser.uid;
     }
 

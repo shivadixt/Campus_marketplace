@@ -9,11 +9,11 @@ class AuthGate extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final authState = ref.watch(authStateProvider);
+    final profileAsync = ref.watch(currentUserProfileProvider);
 
-    return authState.when(
-      data: (user) {
-        if (user != null) {
+    return profileAsync.when(
+      data: (profile) {
+        if (profile != null) {
           return const HomeScreen();
         }
         return const LoginScreen();
@@ -23,11 +23,7 @@ class AuthGate extends ConsumerWidget {
           child: CircularProgressIndicator(),
         ),
       ),
-      error: (error, stack) => Scaffold(
-        body: Center(
-          child: Text('Authentication Error: $error'),
-        ),
-      ),
+      error: (error, stack) => const LoginScreen(),
     );
   }
 }

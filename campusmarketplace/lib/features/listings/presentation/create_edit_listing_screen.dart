@@ -131,7 +131,14 @@ class _CreateEditListingScreenState extends ConsumerState<CreateEditListingScree
     final userProfile = ref.read(currentUserProfileProvider).value;
     final authUser = ref.read(authStateProvider).value;
 
-    if (authUser == null) {
+    String activeUserId = '';
+    if (userProfile != null) {
+      activeUserId = userProfile.id;
+    } else if (authUser != null) {
+      activeUserId = authUser.uid;
+    }
+
+    if (activeUserId.isEmpty) {
       _showSnackBar('You must be logged in to create a listing.');
       return;
     }
@@ -146,22 +153,34 @@ class _CreateEditListingScreenState extends ConsumerState<CreateEditListingScree
     final price = double.parse(_priceController.text.trim());
 
     String sellerDisplayName = 'Campus Student';
-    if (userProfile != null && userProfile.name.isNotEmpty) {
-      sellerDisplayName = userProfile.name;
-    } else if (authUser.displayName != null && authUser.displayName!.isNotEmpty) {
-      sellerDisplayName = authUser.displayName!;
+    if (userProfile != null) {
+      if (userProfile.name.isNotEmpty) {
+        sellerDisplayName = userProfile.name;
+      }
+    } else if (authUser != null) {
+      if (authUser.displayName != null) {
+        if (authUser.displayName!.isNotEmpty) {
+          sellerDisplayName = authUser.displayName!;
+        }
+      }
     }
 
     String sellerPhoto = '';
-    if (userProfile != null && userProfile.photoUrl.isNotEmpty) {
-      sellerPhoto = userProfile.photoUrl;
-    } else if (authUser.photoURL != null) {
-      sellerPhoto = authUser.photoURL!;
+    if (userProfile != null) {
+      if (userProfile.photoUrl.isNotEmpty) {
+        sellerPhoto = userProfile.photoUrl;
+      }
+    } else if (authUser != null) {
+      if (authUser.photoURL != null) {
+        sellerPhoto = authUser.photoURL!;
+      }
     }
 
     String sellerPhone = '';
-    if (userProfile != null && userProfile.phone.isNotEmpty) {
-      sellerPhone = userProfile.phone;
+    if (userProfile != null) {
+      if (userProfile.phone.isNotEmpty) {
+        sellerPhone = userProfile.phone;
+      }
     }
 
     try {
@@ -187,7 +206,7 @@ class _CreateEditListingScreenState extends ConsumerState<CreateEditListingScree
         );
       } else {
         await repo.createListing(
-          sellerId: authUser.uid,
+          sellerId: activeUserId,
           sellerName: sellerDisplayName,
           sellerPhone: sellerPhone,
           sellerPhotoUrl: sellerPhoto,

@@ -47,7 +47,10 @@ class Listing {
 
   // From Firestore
   factory Listing.fromFirestore(DocumentSnapshot<Map<String, dynamic>> doc) {
-    final data = doc.data() ?? {};
+    Map<String, dynamic> data = {};
+    if (doc.data() != null) {
+      data = doc.data()!;
+    }
 
     DateTime? createdTime;
     if (data['createdAt'] is Timestamp) {
@@ -74,19 +77,64 @@ class Listing {
       images = List<String>.from(data['imageUrls']);
     }
 
+    String itemSellerId = '';
+    if (data['sellerId'] != null) {
+      itemSellerId = data['sellerId'].toString();
+    }
+
+    String itemSellerName = 'Campus Seller';
+    if (data['sellerName'] != null) {
+      itemSellerName = data['sellerName'].toString();
+    }
+
+    String itemSellerPhone = '';
+    if (data['sellerPhone'] != null) {
+      itemSellerPhone = data['sellerPhone'].toString();
+    }
+
+    String itemSellerPhoto = '';
+    if (data['sellerPhotoUrl'] != null) {
+      itemSellerPhoto = data['sellerPhotoUrl'].toString();
+    }
+
+    String itemTitle = '';
+    if (data['title'] != null) {
+      itemTitle = data['title'].toString();
+    }
+
+    String itemDescription = '';
+    if (data['description'] != null) {
+      itemDescription = data['description'].toString();
+    }
+
+    String itemCategory = 'Others';
+    if (data['category'] != null) {
+      itemCategory = data['category'].toString();
+    }
+
+    String itemCondition = 'Good';
+    if (data['condition'] != null) {
+      itemCondition = data['condition'].toString();
+    }
+
+    String itemLocation = '';
+    if (data['location'] != null) {
+      itemLocation = data['location'].toString();
+    }
+
     return Listing(
       id: doc.id,
-      sellerId: data['sellerId'] ?? '',
-      sellerName: data['sellerName'] ?? 'Campus Seller',
-      sellerPhone: data['sellerPhone'] ?? '',
-      sellerPhotoUrl: data['sellerPhotoUrl'] ?? '',
-      title: data['title'] ?? '',
-      description: data['description'] ?? '',
+      sellerId: itemSellerId,
+      sellerName: itemSellerName,
+      sellerPhone: itemSellerPhone,
+      sellerPhotoUrl: itemSellerPhoto,
+      title: itemTitle,
+      description: itemDescription,
       price: itemPrice,
-      category: data['category'] ?? 'Others',
-      condition: data['condition'] ?? 'Good',
+      category: itemCategory,
+      condition: itemCondition,
       imageUrls: images,
-      location: data['location'] ?? '',
+      location: itemLocation,
       status: itemStatus,
       createdAt: createdTime,
       updatedAt: updatedTime,
@@ -141,22 +189,97 @@ class Listing {
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
+    String newId = this.id;
+    if (id != null) {
+      newId = id;
+    }
+
+    String newSellerId = this.sellerId;
+    if (sellerId != null) {
+      newSellerId = sellerId;
+    }
+
+    String newSellerName = this.sellerName;
+    if (sellerName != null) {
+      newSellerName = sellerName;
+    }
+
+    String newSellerPhone = this.sellerPhone;
+    if (sellerPhone != null) {
+      newSellerPhone = sellerPhone;
+    }
+
+    String newSellerPhoto = this.sellerPhotoUrl;
+    if (sellerPhotoUrl != null) {
+      newSellerPhoto = sellerPhotoUrl;
+    }
+
+    String newTitle = this.title;
+    if (title != null) {
+      newTitle = title;
+    }
+
+    String newDescription = this.description;
+    if (description != null) {
+      newDescription = description;
+    }
+
+    double newPrice = this.price;
+    if (price != null) {
+      newPrice = price;
+    }
+
+    String newCategory = this.category;
+    if (category != null) {
+      newCategory = category;
+    }
+
+    String newCondition = this.condition;
+    if (condition != null) {
+      newCondition = condition;
+    }
+
+    List<String> newImages = this.imageUrls;
+    if (imageUrls != null) {
+      newImages = imageUrls;
+    }
+
+    String newLocation = this.location;
+    if (location != null) {
+      newLocation = location;
+    }
+
+    ListingStatus newStatus = this.status;
+    if (status != null) {
+      newStatus = status;
+    }
+
+    DateTime? newCreatedAt = this.createdAt;
+    if (createdAt != null) {
+      newCreatedAt = createdAt;
+    }
+
+    DateTime? newUpdatedAt = this.updatedAt;
+    if (updatedAt != null) {
+      newUpdatedAt = updatedAt;
+    }
+
     return Listing(
-      id: id ?? this.id,
-      sellerId: sellerId ?? this.sellerId,
-      sellerName: sellerName ?? this.sellerName,
-      sellerPhone: sellerPhone ?? this.sellerPhone,
-      sellerPhotoUrl: sellerPhotoUrl ?? this.sellerPhotoUrl,
-      title: title ?? this.title,
-      description: description ?? this.description,
-      price: price ?? this.price,
-      category: category ?? this.category,
-      condition: condition ?? this.condition,
-      imageUrls: imageUrls ?? this.imageUrls,
-      location: location ?? this.location,
-      status: status ?? this.status,
-      createdAt: createdAt ?? this.createdAt,
-      updatedAt: updatedAt ?? this.updatedAt,
+      id: newId,
+      sellerId: newSellerId,
+      sellerName: newSellerName,
+      sellerPhone: newSellerPhone,
+      sellerPhotoUrl: newSellerPhoto,
+      title: newTitle,
+      description: newDescription,
+      price: newPrice,
+      category: newCategory,
+      condition: newCondition,
+      imageUrls: newImages,
+      location: newLocation,
+      status: newStatus,
+      createdAt: newCreatedAt,
+      updatedAt: newUpdatedAt,
     );
   }
 }

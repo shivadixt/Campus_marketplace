@@ -16,14 +16,23 @@ class MyListingsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final profile = ref.watch(currentUserProfileProvider).value;
     final authUser = ref.watch(authStateProvider).value;
-    if (authUser == null) {
+
+    String currentUserId = '';
+    if (profile != null) {
+      currentUserId = profile.id;
+    } else if (authUser != null) {
+      currentUserId = authUser.uid;
+    }
+
+    if (currentUserId.isEmpty) {
       return const Scaffold(
         body: Center(child: Text('Please log in to manage your listings.')),
       );
     }
 
-    final listingsAsync = ref.watch(userListingsProvider(authUser.uid));
+    final listingsAsync = ref.watch(userListingsProvider(currentUserId));
 
     return DefaultTabController(
       length: 2,

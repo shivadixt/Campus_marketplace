@@ -24,6 +24,26 @@ class UserProfile {
       return UserProfile(id: doc.id, name: 'Student', email: '');
     }
 
+    String userName = 'Student';
+    if (data['name'] != null) {
+      userName = data['name'].toString();
+    }
+
+    String userEmail = '';
+    if (data['email'] != null) {
+      userEmail = data['email'].toString();
+    }
+
+    String userPhone = '';
+    if (data['phone'] != null) {
+      userPhone = data['phone'].toString();
+    }
+
+    String userPhoto = '';
+    if (data['photoUrl'] != null) {
+      userPhoto = data['photoUrl'].toString();
+    }
+
     DateTime? createdTime;
     final timestamp = data['createdAt'];
     if (timestamp is Timestamp) {
@@ -32,10 +52,10 @@ class UserProfile {
 
     return UserProfile(
       id: doc.id,
-      name: data['name'] ?? 'Student',
-      email: data['email'] ?? '',
-      phone: data['phone'] ?? '',
-      photoUrl: data['photoUrl'] ?? '',
+      name: userName,
+      email: userEmail,
+      phone: userPhone,
+      photoUrl: userPhoto,
       createdAt: createdTime,
     );
   }
@@ -65,13 +85,43 @@ class UserProfile {
     String? photoUrl,
     DateTime? createdAt,
   }) {
+    String newId = this.id;
+    if (id != null) {
+      newId = id;
+    }
+
+    String newName = this.name;
+    if (name != null) {
+      newName = name;
+    }
+
+    String newEmail = this.email;
+    if (email != null) {
+      newEmail = email;
+    }
+
+    String newPhone = this.phone;
+    if (phone != null) {
+      newPhone = phone;
+    }
+
+    String newPhoto = this.photoUrl;
+    if (photoUrl != null) {
+      newPhoto = photoUrl;
+    }
+
+    DateTime? newCreatedAt = this.createdAt;
+    if (createdAt != null) {
+      newCreatedAt = createdAt;
+    }
+
     return UserProfile(
-      id: id ?? this.id,
-      name: name ?? this.name,
-      email: email ?? this.email,
-      phone: phone ?? this.phone,
-      photoUrl: photoUrl ?? this.photoUrl,
-      createdAt: createdAt ?? this.createdAt,
+      id: newId,
+      name: newName,
+      email: newEmail,
+      phone: newPhone,
+      photoUrl: newPhoto,
+      createdAt: newCreatedAt,
     );
   }
 }
