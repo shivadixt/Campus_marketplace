@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "131317260630",
+    "project_id": "campus-marketplace-7bbb7",
+    "storage_bucket": "campus-marketplace-7bbb7.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:131317260630:android:32e1e00e443268333eb6f7",
+        "android_client_info": {
+          "package_name": "com.example.campus_marketplace"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "131317260630-r27e1ch8uknkm538g4bdge5s4h483r7h.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCLsVEYryzTYeyJODgBna_ALcxkPx1zew4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "131317260630-r27e1ch8uknkm538g4bdge5s4h483r7h.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

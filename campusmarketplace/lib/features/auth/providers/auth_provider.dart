@@ -16,12 +16,9 @@ final authStateProvider = StreamProvider<User?>((ref) {
 // Stream provider for active student profile
 final currentUserProfileProvider = StreamProvider<UserProfile?>((ref) {
   final repo = ref.watch(authRepositoryProvider);
-  final authUser = ref.watch(authStateProvider).value;
+  final authStateAsync = ref.watch(authStateProvider);
 
-  if (repo.currentDemoProfile != null) {
-    return repo.watchUserProfile(repo.currentDemoProfile!.id);
-  }
-
+  final authUser = authStateAsync.asData?.value;
   if (authUser != null) {
     return repo.watchUserProfile(authUser.uid);
   }
@@ -29,7 +26,7 @@ final currentUserProfileProvider = StreamProvider<UserProfile?>((ref) {
   return Stream.value(null);
 });
 
-// Provider for fetching any seller's profile by ID
+// Provider for fetching any seller profile by ID
 final userProfileProvider = FutureProvider.family<UserProfile?, String>((ref, userId) async {
   final repo = ref.watch(authRepositoryProvider);
   return repo.getUserProfile(userId);

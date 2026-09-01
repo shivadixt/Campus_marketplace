@@ -1,29 +1,24 @@
 import 'dart:async';
-import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:image_picker/image_picker.dart';
-import '../../../core/utils/image_compressor.dart';
 import '../../../models/user_profile.dart';
+import '../../listings/data/storage_service.dart';
 
 class AuthRepository {
   final FirebaseAuth _auth;
   final FirebaseFirestore _firestore;
-  final FirebaseStorage _storage;
-
-  // Demo state
-  static UserProfile? _demoProfile;
-  final StreamController<UserProfile?> _demoProfileController = StreamController<UserProfile?>.broadcast();
+  final StorageService _storageService;
 
   AuthRepository({
     FirebaseAuth? auth,
     FirebaseFirestore? firestore,
-    FirebaseStorage? storage,
+    StorageService? storageService,
   })  : _auth = _resolveAuth(auth),
         _firestore = _resolveFirestore(firestore),
-        _storage = _resolveStorage(storage);
+        _storageService = _resolveStorageService(storageService);
 
   static FirebaseAuth _resolveAuth(FirebaseAuth? auth) {
     if (auth != null) {
@@ -39,11 +34,11 @@ class AuthRepository {
     return FirebaseFirestore.instance;
   }
 
-  static FirebaseStorage _resolveStorage(FirebaseStorage? storage) {
-    if (storage != null) {
-      return storage;
+  static StorageService _resolveStorageService(StorageService? storageService) {
+    if (storageService != null) {
+      return storageService;
     }
-    return FirebaseStorage.instance;
+    return StorageService();
   }
 
   Stream<User?> get authStateChanges {
@@ -54,105 +49,125 @@ class AuthRepository {
     return _auth.currentUser;
   }
 
-  UserProfile? get currentDemoProfile {
-    return _demoProfile;
-  }
-
-  // Demo student login
-  Future<UserProfile> signInWithDemoStudent({
-    String email = 'shiva.dixit_cs24@gla.ac.in',
-    String name = 'Shiva Dixit',
-    String phone = '8218071428',
-  }) async {
-    _demoProfile = UserProfile(
-      id: 'demo_student_101',
-      name: name,
-      email: email,
-      phone: phone,
-      createdAt: DateTime(2024, 8, 1),
-    );
-    _demoProfileController.add(_demoProfile);
-    return _demoProfile!;
-  }
-
-  // Sign up
+  // Sign up with email and password
   Future<UserProfile> signUp({
     required String email,
     required String password,
     required String name,
     String phone = '',
   }) async {
-    try {
-      final userCredential = await _auth.createUserWithEmailAndPassword(
-        email: email.trim(),
-        password: password,
-      );
+    final userCredential = await _auth.createUserWithEmailAndPassword(
+      email: email.trim(),
+      password: password,
+    );
 
-      final user = userCredential.user;
-      if (user == null) {
-        throw Exception('User registration failed');
-      }
-
-      await user.updateDisplayName(name.trim());
-
-      final profile = UserProfile(
-        id: user.uid,
-        name: name.trim(),
-        email: email.trim(),
-        phone: phone.trim(),
-        createdAt: DateTime.now(),
-      );
-
-      await _firestore.collection('users').doc(user.uid).set(profile.toFirestore());
-      return profile;
-    } catch (e) {
-      debugPrint('Firebase signUp error: $e');
-      return signInWithDemoStudent(email: email, name: name, phone: phone);
+    final user = userCredential.user;
+    if (user == null) {
+      throw Exception('User registration failed');
     }
+
+    await user.updateDisplayName(name.trim());
+
+    final profile = UserProfile(
+      id: user.uid,
+      name: name.trim(),
+      email: email.trim(),
+      phone: phone.trim(),
+      createdAt: DateTime.now(),
+    );
+
+    await _firestore.collection('users').doc(user.uid).set(profile.toFirestore());
+    return profile;
   }
 
-  // Sign in
+  // Google Sign In
+  Future<UserProfile?> signInWithGoogle() async {
+    final googleSignIn = GoogleSignIn();
+    final googleUser = await googleSignIn.signIn();
+
+    if (googleUser == null) {
+      return null;
+    }
+
+    final googleAuth = await googleUser.authentication;
+    final credential = GoogleAuthProvider.credential(
+      accessToken: googleAuth.accessToken,
+      idToken: googleAuth.idToken,
+    );
+
+    final userCredential = await _auth.signInWithCredential(credential);
+    final user = userCredential.user;
+
+    if (user == null) {
+      return null;
+    }
+
+    // Check if profile already exists in Firestore
+    final existingProfile = await getUserProfile(user.uid);
+    if (existingProfile != null) {
+      return existingProfile;
+    }
+
+    // First time Google login, create new profile
+    String studentName = 'Campus Student';
+    if (user.displayName != null) {
+      if (user.displayName!.isNotEmpty) {
+        studentName = user.displayName!;
+      }
+    }
+
+    String studentEmail = '';
+    if (user.email != null) {
+      studentEmail = user.email!;
+    }
+
+    String studentPhoto = '';
+    if (user.photoURL != null) {
+      studentPhoto = user.photoURL!;
+    }
+
+    final newProfile = UserProfile(
+      id: user.uid,
+      name: studentName,
+      email: studentEmail,
+      photoUrl: studentPhoto,
+      createdAt: DateTime.now(),
+    );
+
+    await _firestore.collection('users').doc(user.uid).set(newProfile.toFirestore());
+    return newProfile;
+  }
+
+  // Sign in with email and password
   Future<UserProfile?> signIn({
     required String email,
     required String password,
   }) async {
-    try {
-      final userCredential = await _auth.signInWithEmailAndPassword(
-        email: email.trim(),
-        password: password,
-      );
+    final userCredential = await _auth.signInWithEmailAndPassword(
+      email: email.trim(),
+      password: password,
+    );
 
-      final user = userCredential.user;
-      if (user == null) {
-        return null;
-      }
-
-      return getUserProfile(user.uid);
-    } catch (e) {
-      debugPrint('Firebase signIn error: $e');
-      return signInWithDemoStudent(email: email, name: email.split('@').first);
+    final user = userCredential.user;
+    if (user == null) {
+      return null;
     }
+
+    return getUserProfile(user.uid);
   }
 
   // Sign out
   Future<void> signOut() async {
-    _demoProfile = null;
-    _demoProfileController.add(null);
     try {
-      await _auth.signOut();
+      await GoogleSignIn().signOut();
     } catch (e) {
-      debugPrint('Signout note: $e');
+      debugPrint('Google sign out note: $e');
     }
+    await _auth.signOut();
   }
 
-  // Get user profile
+  // Get user profile from Firestore
   Future<UserProfile?> getUserProfile(String userId) async {
-    if (_demoProfile != null) {
-      if (_demoProfile!.id == userId) {
-        return _demoProfile;
-      }
-    }
-
     try {
       final doc = await _firestore.collection('users').doc(userId).get();
       if (doc.exists) {
@@ -163,23 +178,19 @@ class AuthRepository {
       return null;
     } catch (e) {
       debugPrint('Fetch profile error: $e');
-      return _demoProfile;
+      return null;
     }
   }
 
-  // Watch user profile
+  // Watch user profile in real-time
   Stream<UserProfile?> watchUserProfile(String userId) {
-    if (_demoProfile != null) {
-      return _demoProfileController.stream;
-    }
-
     return _firestore.collection('users').doc(userId).snapshots().map((doc) {
       if (doc.exists) {
         if (doc.data() != null) {
           return UserProfile.fromFirestore(doc);
         }
       }
-      return _demoProfile;
+      return null;
     });
   }
 
@@ -194,29 +205,14 @@ class AuthRepository {
 
     if (newPhotoFile != null) {
       try {
-        final compressed = await ImageCompressor.compressImage(newPhotoFile);
-        final ref = _storage.ref().child('profile_photos/$userId/avatar_${DateTime.now().millisecondsSinceEpoch}.jpg');
-        await ref.putFile(File(compressed.path), SettableMetadata(contentType: 'image/jpeg'));
-        photoUrl = await ref.getDownloadURL();
+        photoUrl = await _storageService.uploadImageToCloudinary(
+          imageFile: newPhotoFile,
+          folder: 'campus_marketplace/profiles/$userId',
+        );
       } catch (e) {
-        debugPrint('Avatar storage upload notice: $e');
+        debugPrint('Avatar Cloudinary upload error: $e');
         photoUrl = newPhotoFile.path;
       }
-    }
-
-    if (_demoProfile != null) {
-      String currentPhoto = _demoProfile!.photoUrl;
-      if (photoUrl.isNotEmpty) {
-        currentPhoto = photoUrl;
-      }
-
-      _demoProfile = _demoProfile!.copyWith(
-        name: name.trim(),
-        phone: phone.trim(),
-        photoUrl: currentPhoto,
-      );
-      _demoProfileController.add(_demoProfile);
-      return _demoProfile!;
     }
 
     final updateData = <String, dynamic>{
@@ -227,16 +223,13 @@ class AuthRepository {
       updateData['photoUrl'] = photoUrl;
     }
 
-    try {
-      await _firestore.collection('users').doc(userId).set(updateData, SetOptions(merge: true));
-      if (_auth.currentUser != null) {
-        await _auth.currentUser!.updateDisplayName(name.trim());
-        if (photoUrl.isNotEmpty) {
-          await _auth.currentUser!.updatePhotoURL(photoUrl);
-        }
+    await _firestore.collection('users').doc(userId).set(updateData, SetOptions(merge: true));
+
+    if (_auth.currentUser != null) {
+      await _auth.currentUser!.updateDisplayName(name.trim());
+      if (photoUrl.isNotEmpty) {
+        await _auth.currentUser!.updatePhotoURL(photoUrl);
       }
-    } catch (e) {
-      debugPrint('Firestore profile update notice: $e');
     }
 
     final updated = await getUserProfile(userId);

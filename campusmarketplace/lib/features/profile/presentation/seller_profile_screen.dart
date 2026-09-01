@@ -56,22 +56,33 @@ class SellerProfileScreen extends ConsumerWidget {
 
                     final memberSince = Formatters.formatMemberSince(profile?.createdAt);
 
+                    ImageProvider? avatarImage;
+                    Widget? avatarChild;
+
+                    if (photoUrl.isNotEmpty) {
+                      avatarImage = NetworkImage(photoUrl);
+                    } else {
+                      String initialLetter = 'S';
+                      if (name.isNotEmpty) {
+                        initialLetter = name[0].toUpperCase();
+                      }
+                      avatarChild = Text(
+                        initialLetter,
+                        style: const TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.primary,
+                        ),
+                      );
+                    }
+
                     return Row(
                       children: [
                         CircleAvatar(
                           radius: 32,
                           backgroundColor: AppColors.primaryContainer,
-                          backgroundImage: photoUrl.isNotEmpty ? NetworkImage(photoUrl) : null,
-                          child: photoUrl.isEmpty
-                              ? Text(
-                                  name.isNotEmpty ? name[0].toUpperCase() : 'S',
-                                  style: const TextStyle(
-                                    fontSize: 24,
-                                    fontWeight: FontWeight.w700,
-                                    color: AppColors.primary,
-                                  ),
-                                )
-                              : null,
+                          backgroundImage: avatarImage,
+                          child: avatarChild,
                         ),
                         const SizedBox(width: 16),
                         Expanded(
@@ -150,7 +161,7 @@ class SellerProfileScreen extends ConsumerWidget {
                     padding: const EdgeInsets.all(16),
                     gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: 2,
-                      childAspectRatio: 0.64,
+                      childAspectRatio: 0.78,
                       crossAxisSpacing: 12,
                       mainAxisSpacing: 12,
                     ),

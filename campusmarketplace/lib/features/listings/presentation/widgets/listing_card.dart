@@ -131,15 +131,28 @@ class ListingCard extends StatelessWidget {
                           const SizedBox(height: 2),
                           Text(
                             listing.title,
-                            maxLines: 2,
+                            maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: const TextStyle(
                               fontSize: 13,
-                              fontWeight: FontWeight.w600,
+                              fontWeight: FontWeight.w700,
                               color: AppColors.textPrimary,
                               height: 1.25,
                             ),
                           ),
+                          if (listing.description.isNotEmpty) ...[
+                            const SizedBox(height: 3),
+                            Text(
+                              listing.description,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 11,
+                                color: AppColors.textSecondary,
+                                height: 1.25,
+                              ),
+                            ),
+                          ],
                         ],
                       ),
 

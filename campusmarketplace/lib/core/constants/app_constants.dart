@@ -5,6 +5,10 @@ class AppConstants {
 
   static const String appName = 'Campus Marketplace';
 
+  // Cloudinary configuration
+  static const String cloudinaryCloudName = 'x6rkroh7';
+  static const String cloudinaryUploadPreset = 'campus_preset';
+
   // Categories
   static const List<String> categories = [
     'Books',

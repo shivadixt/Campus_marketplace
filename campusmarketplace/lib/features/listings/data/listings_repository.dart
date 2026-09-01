@@ -10,85 +10,6 @@ class ListingsRepository {
   final FirebaseFirestore _firestore;
   final StorageService _storageService;
 
-  // In-Memory Sample Listings for instant test/demo
-  static final List<Listing> _localListings = [
-    Listing(
-      id: 'demo_item_1',
-      sellerId: 'demo_seller_1',
-      sellerName: 'Rahul Sharma',
-      sellerPhone: '+91 98765 43211',
-      sellerPhotoUrl: '',
-      title: 'Casio FX-991EX Scientific Calculator',
-      description: 'Barely used for 1 semester in Engineering Math. Mint condition with original hard cover and manual.',
-      price: 650.0,
-      category: 'Calculators',
-      condition: 'Like New',
-      imageUrls: [
-        'https://images.unsplash.com/photo-1594980596870-8aa52a78d8cd?w=600&auto=format&fit=crop&q=80',
-      ],
-      location: 'Hostel Block A, Room 204',
-      status: ListingStatus.active,
-      createdAt: DateTime.now().subtract(const Duration(hours: 3)),
-    ),
-    Listing(
-      id: 'demo_item_2',
-      sellerId: 'demo_seller_2',
-      sellerName: 'Priya Singh',
-      sellerPhone: '+91 98765 43212',
-      sellerPhotoUrl: '',
-      title: 'Concepts of Physics (HC Verma Vol 1 & 2)',
-      description: 'Complete set with handwritten solved formula notes. Essential for 1st year engineering physics.',
-      price: 450.0,
-      category: 'Books',
-      condition: 'Good',
-      imageUrls: [
-        'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=600&auto=format&fit=crop&q=80',
-      ],
-      location: 'Central Library Lawn',
-      status: ListingStatus.active,
-      createdAt: DateTime.now().subtract(const Duration(days: 1)),
-    ),
-    Listing(
-      id: 'demo_item_3',
-      sellerId: 'demo_student_101',
-      sellerName: 'Shiva Dixit',
-      sellerPhone: '8218071428',
-      sellerPhotoUrl: '',
-      title: 'Sony Wireless Noise Cancelling Headphones',
-      description: 'Super comfortable for studying in noisy hostels. Great battery backup (30+ hours) with aux cable.',
-      price: 1200.0,
-      category: 'Electronics',
-      condition: 'Like New',
-      imageUrls: [
-        'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=600&auto=format&fit=crop&q=80',
-      ],
-      location: 'Computer Science Dept Lab 3',
-      status: ListingStatus.active,
-      createdAt: DateTime.now().subtract(const Duration(days: 2)),
-    ),
-    Listing(
-      id: 'demo_item_4',
-      sellerId: 'demo_seller_3',
-      sellerName: 'Amit Kumar',
-      sellerPhone: '+91 98765 43213',
-      sellerPhotoUrl: '',
-      title: 'Wooden Study Desk & Ergonomic Chair',
-      description: 'Solid wooden desk suitable for laptop and book reading. Easy to assemble, moving out of hostel.',
-      price: 1400.0,
-      category: 'Furniture',
-      condition: 'Used',
-      imageUrls: [
-        'https://images.unsplash.com/photo-1518455027359-f3f8164ba6bd?w=600&auto=format&fit=crop&q=80',
-      ],
-      location: 'Hostel Block C Ground Floor',
-      status: ListingStatus.active,
-      createdAt: DateTime.now().subtract(const Duration(days: 4)),
-    ),
-  ];
-
-  static final StreamController<List<Listing>> _localStreamController =
-      StreamController<List<Listing>>.broadcast();
-
   ListingsRepository({
     FirebaseFirestore? firestore,
     StorageService? storageService,
@@ -160,16 +81,7 @@ class ListingsRepository {
       updatedAt: DateTime.now(),
     );
 
-    // Add to local list for instant reactivity
-    _localListings.insert(0, listing);
-    _localStreamController.add(List.from(_localListings));
-
-    try {
-      await _listingsRef.doc(listingId).set(listing.toFirestore());
-    } catch (e) {
-      debugPrint('Firestore write note: $e');
-    }
-
+    await _listingsRef.doc(listingId).set(listing.toFirestore());
     return listing;
   }
 
@@ -213,157 +125,108 @@ class ListingsRepository {
       updatedAt: DateTime.now(),
     );
 
-    // Update in local list
-    final index = _localListings.indexWhere((l) => l.id == existingListing.id);
-    if (index != -1) {
-      _localListings[index] = updated;
-      _localStreamController.add(List.from(_localListings));
-    }
-
-    try {
-      await _listingsRef.doc(existingListing.id).update(updated.toFirestore());
-    } catch (e) {
-      debugPrint('Firestore update note: $e');
-    }
-
+    await _listingsRef.doc(existingListing.id).update(updated.toFirestore());
     return updated;
   }
 
   // Mark as sold
   Future<void> markAsSold(String listingId) async {
-    final index = _localListings.indexWhere((l) => l.id == listingId);
-    if (index != -1) {
-      _localListings[index] = _localListings[index].copyWith(status: ListingStatus.sold);
-      _localStreamController.add(List.from(_localListings));
-    }
-
-    try {
-      await _listingsRef.doc(listingId).update({
-        'status': 'sold',
-        'updatedAt': FieldValue.serverTimestamp(),
-      });
-    } catch (e) {
-      debugPrint('Firestore mark sold note: $e');
-    }
+    await _listingsRef.doc(listingId).update({
+      'status': 'sold',
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
   }
 
   // Mark as active
   Future<void> markAsActive(String listingId) async {
-    final index = _localListings.indexWhere((l) => l.id == listingId);
-    if (index != -1) {
-      _localListings[index] = _localListings[index].copyWith(status: ListingStatus.active);
-      _localStreamController.add(List.from(_localListings));
-    }
-
-    try {
-      await _listingsRef.doc(listingId).update({
-        'status': 'active',
-        'updatedAt': FieldValue.serverTimestamp(),
-      });
-    } catch (e) {
-      debugPrint('Firestore mark active note: $e');
-    }
+    await _listingsRef.doc(listingId).update({
+      'status': 'active',
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
   }
 
   // Delete listing
   Future<void> deleteListing(String listingId) async {
-    _localListings.removeWhere((l) => l.id == listingId);
-    _localStreamController.add(List.from(_localListings));
+    await _listingsRef.doc(listingId).delete();
+    await _storageService.deleteListingFolder(listingId);
+  }
 
-    try {
-      await _listingsRef.doc(listingId).delete();
-      await _storageService.deleteListingFolder(listingId);
-    } catch (e) {
-      debugPrint('Firestore delete note: $e');
+  // Helper to compare dates cleanly
+  static int _compareCreatedAt(Listing a, Listing b) {
+    final dateA = a.createdAt;
+    final dateB = b.createdAt;
+    if (dateA == null && dateB == null) {
+      return 0;
     }
+    if (dateA == null) {
+      return 1;
+    }
+    if (dateB == null) {
+      return -1;
+    }
+    return dateB.compareTo(dateA);
   }
 
   // Watch active feed
   Stream<List<Listing>> watchActiveListings({String category = 'All'}) {
-    try {
-      Query<Map<String, dynamic>> query = _listingsRef
-          .where('status', isEqualTo: 'active')
-          .orderBy('createdAt', descending: true);
-
-      if (category.isNotEmpty && category != 'All') {
-        query = query.where('category', isEqualTo: category);
-      }
-
-      return query.snapshots().map((snapshot) {
-        if (snapshot.docs.isNotEmpty) {
-          return snapshot.docs.map((doc) => Listing.fromFirestore(doc)).toList();
+    return _listingsRef
+        .where('status', isEqualTo: 'active')
+        .snapshots()
+        .map((snapshot) {
+      final List<Listing> list = [];
+      for (final doc in snapshot.docs) {
+        final item = Listing.fromFirestore(doc);
+        if (category.isEmpty || category == 'All' || item.category == category) {
+          list.add(item);
         }
-        return _filterLocalActive(category);
-      });
-    } catch (e) {
-      return Stream.value(_filterLocalActive(category));
-    }
-  }
-
-  List<Listing> _filterLocalActive(String category) {
-    final active = _localListings.where((l) => l.isActive).toList();
-    if (category.isNotEmpty && category != 'All') {
-      return active.where((l) => l.category == category).toList();
-    }
-    return active;
+      }
+      list.sort(_compareCreatedAt);
+      return list;
+    });
   }
 
   // Watch user listings
   Stream<List<Listing>> watchUserListings(String userId) {
-    try {
-      return _listingsRef
-          .where('sellerId', isEqualTo: userId)
-          .orderBy('createdAt', descending: true)
-          .snapshots()
-          .map((snapshot) {
-        if (snapshot.docs.isNotEmpty) {
-          return snapshot.docs.map((doc) => Listing.fromFirestore(doc)).toList();
-        }
-        return _localListings.where((l) => l.sellerId == userId).toList();
-      });
-    } catch (e) {
-      return Stream.value(_localListings.where((l) => l.sellerId == userId).toList());
-    }
+    return _listingsRef
+        .where('sellerId', isEqualTo: userId)
+        .snapshots()
+        .map((snapshot) {
+      final List<Listing> list = [];
+      for (final doc in snapshot.docs) {
+        list.add(Listing.fromFirestore(doc));
+      }
+      list.sort(_compareCreatedAt);
+      return list;
+    });
   }
 
   // Watch seller active listings
   Stream<List<Listing>> watchSellerActiveListings(String sellerId) {
-    try {
-      return _listingsRef
-          .where('sellerId', isEqualTo: sellerId)
-          .where('status', isEqualTo: 'active')
-          .orderBy('createdAt', descending: true)
-          .snapshots()
-          .map((snapshot) {
-        if (snapshot.docs.isNotEmpty) {
-          return snapshot.docs.map((doc) => Listing.fromFirestore(doc)).toList();
+    return _listingsRef
+        .where('sellerId', isEqualTo: sellerId)
+        .snapshots()
+        .map((snapshot) {
+      final List<Listing> list = [];
+      for (final doc in snapshot.docs) {
+        final item = Listing.fromFirestore(doc);
+        if (item.isActive) {
+          list.add(item);
         }
-        return _localListings.where((l) => l.sellerId == sellerId && l.isActive).toList();
-      });
-    } catch (e) {
-      return Stream.value(_localListings.where((l) => l.sellerId == sellerId && l.isActive).toList());
-    }
+      }
+      list.sort(_compareCreatedAt);
+      return list;
+    });
   }
 
   // Watch single listing
   Stream<Listing?> watchListing(String listingId) {
-    try {
-      return _listingsRef.doc(listingId).snapshots().map((doc) {
-        if (doc.exists && doc.data() != null) {
+    return _listingsRef.doc(listingId).snapshots().map((doc) {
+      if (doc.exists) {
+        if (doc.data() != null) {
           return Listing.fromFirestore(doc);
         }
-        final match = _localListings.where((l) => l.id == listingId).toList();
-        if (match.isNotEmpty) {
-          return match.first;
-        }
-        return null;
-      });
-    } catch (e) {
-      final match = _localListings.where((l) => l.id == listingId).toList();
-      if (match.isNotEmpty) {
-        return Stream.value(match.first);
       }
-      return Stream.value(null);
-    }
+      return null;
+    });
   }
 }

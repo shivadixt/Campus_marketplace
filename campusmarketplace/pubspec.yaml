@@ -37,6 +37,7 @@ dependencies:
   # Firebase Core & Services
   firebase_core: ^3.6.0
   firebase_auth: ^5.3.1
+  google_sign_in: ^6.2.2
   cloud_firestore: ^5.4.4
   firebase_storage: ^12.3.2
 
@@ -46,6 +47,7 @@ dependencies:
   cached_network_image: ^3.4.1
 
   # Utilities & Interop
+  http: ^1.2.2
   url_launcher: ^6.3.0
   intl: ^0.19.0
   uuid: ^4.5.1

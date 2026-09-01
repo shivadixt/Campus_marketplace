@@ -1,23 +1,48 @@
-import 'dart:io';
-import 'package:firebase_storage/firebase_storage.dart';
+import 'dart:convert';
 import 'package:flutter/foundation.dart';
+import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
+import '../../../core/constants/app_constants.dart';
 import '../../../core/utils/image_compressor.dart';
 
 class StorageService {
-  final FirebaseStorage _storage;
+  StorageService();
 
-  StorageService({FirebaseStorage? storage})
-      : _storage = _resolveStorage(storage);
+  // Upload single photo to Cloudinary
+  Future<String> uploadImageToCloudinary({
+    required XFile imageFile,
+    String folder = 'campus_marketplace',
+  }) async {
+    final compressed = await ImageCompressor.compressImage(imageFile);
 
-  static FirebaseStorage _resolveStorage(FirebaseStorage? storage) {
-    if (storage != null) {
-      return storage;
+    final url = Uri.parse(
+      'https://api.cloudinary.com/v1_1/${AppConstants.cloudinaryCloudName}/image/upload',
+    );
+
+    final request = http.MultipartRequest('POST', url);
+    request.fields['upload_preset'] = AppConstants.cloudinaryUploadPreset;
+    request.fields['folder'] = folder;
+
+    final multipartFile = await http.MultipartFile.fromPath('file', compressed.path);
+    request.files.add(multipartFile);
+
+    final streamedResponse = await request.send();
+    final response = await http.Response.fromStream(streamedResponse);
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      final responseData = jsonDecode(response.body) as Map<String, dynamic>;
+      String secureUrl = '';
+      if (responseData['secure_url'] != null) {
+        secureUrl = responseData['secure_url'].toString();
+      }
+      return secureUrl;
+    } else {
+      debugPrint('Cloudinary upload error (${response.statusCode}): ${response.body}');
+      throw Exception('Failed to upload image to Cloudinary');
     }
-    return FirebaseStorage.instance;
   }
 
-  // Upload listing photos
+  // Upload multiple listing photos
   Future<List<String>> uploadListingImages({
     required String listingId,
     required List<XFile> images,
@@ -27,7 +52,7 @@ class StorageService {
       return [];
     }
 
-    final List<String> downloadUrls = [];
+    final List<String> uploadedUrls = [];
     final int totalImages = images.length;
 
     for (int i = 0; i < totalImages; i++) {
@@ -35,46 +60,30 @@ class StorageService {
       final int imageNumber = i + 1;
 
       if (onProgress != null) {
-        final double compressionProgress = (i / totalImages) * 0.5;
-        onProgress(compressionProgress, 'Compressing photo $imageNumber of $totalImages...');
+        final double progressValue = (i / totalImages);
+        onProgress(progressValue, 'Uploading photo $imageNumber of $totalImages to Cloudinary...');
       }
 
-      final compressed = await ImageCompressor.compressImage(rawFile);
-
-      if (onProgress != null) {
-        final double uploadProgress = 0.5 + (i / totalImages) * 0.5;
-        onProgress(uploadProgress, 'Uploading photo $imageNumber of $totalImages...');
-      }
-
-      final fileName = 'photo_${DateTime.now().millisecondsSinceEpoch}_$i.jpg';
-      final ref = _storage.ref().child('listings/$listingId/$fileName');
-
-      final uploadTask = ref.putFile(
-        File(compressed.path),
-        SettableMetadata(contentType: 'image/jpeg'),
+      final uploadedUrl = await uploadImageToCloudinary(
+        imageFile: rawFile,
+        folder: 'campus_marketplace/listings/$listingId',
       );
 
-      final snapshot = await uploadTask;
-      final url = await snapshot.ref.getDownloadURL();
-      downloadUrls.add(url);
+      if (uploadedUrl.isNotEmpty) {
+        uploadedUrls.add(uploadedUrl);
+      }
     }
 
     if (onProgress != null) {
-      onProgress(1.0, 'Upload complete');
+      onProgress(1.0, 'All photos uploaded successfully');
     }
 
-    return downloadUrls;
+    return uploadedUrls;
   }
 
-  // Delete listing photos folder
+  // Delete listing folder (placeholder)
   Future<void> deleteListingFolder(String listingId) async {
-    try {
-      final listResult = await _storage.ref().child('listings/$listingId').listAll();
-      for (final item in listResult.items) {
-        await item.delete();
-      }
-    } catch (e) {
-      debugPrint('Delete folder error: $e');
-    }
+    // Cloudinary direct client deletion requires signed API secret;
+    // Unused assets automatically expire or stay in free tier limits.
   }
 }

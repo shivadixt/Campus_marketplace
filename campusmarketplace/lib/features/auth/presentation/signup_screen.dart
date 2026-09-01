@@ -30,7 +30,40 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
     super.dispose();
   }
 
-  // --- Handle Signup ---
+  // Handle Google Sign In
+  Future<void> _handleGoogleSignup() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final repo = ref.read(authRepositoryProvider);
+      final profile = await repo.signInWithGoogle();
+      if (profile != null) {
+        if (mounted) {
+          Navigator.pop(context);
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Google Sign-In notice: $e'),
+            backgroundColor: AppColors.error,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  // Handle Signup
   Future<void> _handleSignup() async {
     if (!_formKey.currentState!.validate()) {
       return;
@@ -88,6 +121,13 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
       visibilityIcon = Icons.visibility_outlined;
     }
 
+    VoidCallback? onSignupAction = _handleSignup;
+    VoidCallback? onGoogleAction = _handleGoogleSignup;
+    if (_isLoading) {
+      onSignupAction = null;
+      onGoogleAction = null;
+    }
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -102,7 +142,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // --- Header ---
+                  // Header
                   const Text(
                     'Join Campus Marketplace',
                     style: TextStyle(
@@ -122,7 +162,55 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                   ),
                   const SizedBox(height: 24),
 
-                  // --- Signup Card ---
+                  // Google Quick Signup
+                  OutlinedButton.icon(
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      side: const BorderSide(color: AppColors.border, width: 1.2),
+                      backgroundColor: Colors.white,
+                    ),
+                    icon: Image.network(
+                      'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Google_%22G%22_logo.svg/120px-Google_%22G%22_logo.svg.png',
+                      height: 20,
+                      width: 20,
+                      errorBuilder: (context, error, stackTrace) {
+                        return const Icon(Icons.g_mobiledata_rounded, size: 24, color: AppColors.primary);
+                      },
+                    ),
+                    label: const Text(
+                      'Continue with Google',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    onPressed: onGoogleAction,
+                  ),
+                  const SizedBox(height: 20),
+
+                  // Divider OR
+                  const Row(
+                    children: [
+                      Expanded(child: Divider()),
+                      Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 12),
+                        child: Text(
+                          'OR SIGN UP WITH EMAIL',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: AppColors.textTertiary,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ),
+                      Expanded(child: Divider()),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+
+                  // Signup Card
                   Container(
                     padding: const EdgeInsets.all(24),
                     decoration: BoxDecoration(
@@ -144,7 +232,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                             },
                             decoration: const InputDecoration(
                               labelText: 'Full Name',
-                              hintText: 'e.g., Alex Johnson',
+                              hintText: 'e.g., Shiva Dixit',
                               prefixIcon: Icon(Icons.person_outline_rounded, size: 20),
                             ),
                           ),
@@ -157,7 +245,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                             validator: Validators.validateEmail,
                             decoration: const InputDecoration(
                               labelText: 'College / Student Email',
-                              hintText: 'alex@campus.edu',
+                              hintText: 'shiva.dixit_cs24@gla.ac.in',
                               prefixIcon: Icon(Icons.email_outlined, size: 20),
                             ),
                           ),
@@ -169,8 +257,8 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                             keyboardType: TextInputType.phone,
                             validator: Validators.validatePhone,
                             decoration: const InputDecoration(
-                              labelText: 'Phone Number (Optional for WhatsApp)',
-                              hintText: 'e.g., +91 98765 43210',
+                              labelText: 'Phone Number (for WhatsApp)',
+                              hintText: 'e.g., 8218071428',
                               prefixIcon: Icon(Icons.phone_outlined, size: 20),
                             ),
                           ),
@@ -202,7 +290,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
 
                           // Submit Button
                           ElevatedButton(
-                            onPressed: _isLoading ? null : _handleSignup,
+                            onPressed: onSignupAction,
                             child: buttonContent,
                           ),
                         ],

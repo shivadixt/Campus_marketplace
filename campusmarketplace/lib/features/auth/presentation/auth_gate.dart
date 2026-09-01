@@ -9,21 +9,25 @@ class AuthGate extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final profileAsync = ref.watch(currentUserProfileProvider);
+    final authState = ref.watch(authStateProvider);
 
-    return profileAsync.when(
-      data: (profile) {
-        if (profile != null) {
+    return authState.when(
+      data: (user) {
+        if (user != null) {
           return const HomeScreen();
         }
         return const LoginScreen();
       },
-      loading: () => const Scaffold(
-        body: Center(
-          child: CircularProgressIndicator(),
-        ),
-      ),
-      error: (error, stack) => const LoginScreen(),
+      loading: () {
+        return const Scaffold(
+          body: Center(
+            child: CircularProgressIndicator(),
+          ),
+        );
+      },
+      error: (error, stack) {
+        return const LoginScreen();
+      },
     );
   }
 }

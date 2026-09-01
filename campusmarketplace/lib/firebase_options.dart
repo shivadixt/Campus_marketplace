@@ -6,10 +6,10 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyDemoAndroidApiKeyForCampusMarketplace',
-    appId: '1:1234567890:android:abcdef123456',
-    messagingSenderId: '1234567890',
-    projectId: 'campus-marketplace-demo',
-    storageBucket: 'campus-marketplace-demo.appspot.com',
+    apiKey: 'AIzaSyCLsVEYryzTYeyJODgBna_ALcxkPx1zew4',
+    appId: '1:131317260630:android:32e1e00e443268333eb6f7',
+    messagingSenderId: '131317260630',
+    projectId: 'campus-marketplace-7bbb7',
+    storageBucket: 'campus-marketplace-7bbb7.firebasestorage.app',
   );
 }

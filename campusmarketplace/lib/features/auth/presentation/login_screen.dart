@@ -14,8 +14,8 @@ class LoginScreen extends ConsumerStatefulWidget {
 
 class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController(text: 'shiva.dixit_cs24@gla.ac.in');
-  final _passwordController = TextEditingController(text: 'campus123');
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
 
   bool _obscurePassword = true;
   bool _isLoading = false;
@@ -27,24 +27,23 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     super.dispose();
   }
 
-  // Handle Demo Login
-  Future<void> _handleDemoLogin() async {
+  // Handle Google Sign In
+  Future<void> _handleGoogleLogin() async {
     setState(() {
       _isLoading = true;
     });
 
     try {
       final repo = ref.read(authRepositoryProvider);
-      await repo.signInWithDemoStudent(
-        email: _emailController.text.trim().isNotEmpty
-            ? _emailController.text.trim()
-            : 'shiva.dixit_cs24@gla.ac.in',
-        name: 'Shiva Dixit',
-        phone: '8218071428',
-      );
+      final profile = await repo.signInWithGoogle();
+      if (profile == null) {
+        if (mounted) {
+          _showSnackBar('Google Sign-In was cancelled.');
+        }
+      }
     } catch (e) {
       if (mounted) {
-        _showErrorSnackBar('Login failed: $e');
+        _showSnackBar('Google Sign-In failed. Please try again.');
       }
     } finally {
       if (mounted) {
@@ -55,7 +54,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     }
   }
 
-  // Handle Login
+  // Handle Email Login
   Future<void> _handleLogin() async {
     if (!_formKey.currentState!.validate()) {
       return;
@@ -72,14 +71,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         password: _passwordController.text,
       );
 
-      if (profile == null && mounted) {
-        _showErrorSnackBar('Account not found. Logging in as Demo Student...');
-        await _handleDemoLogin();
+      if (profile == null) {
+        if (mounted) {
+          _showSnackBar('Account not found. Please sign up first.');
+        }
       }
     } catch (e) {
       if (mounted) {
-        _showErrorSnackBar('Connecting as Demo Student...');
-        await _handleDemoLogin();
+        _showSnackBar('Login failed. Check your email and password.');
       }
     } finally {
       if (mounted) {
@@ -90,7 +89,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     }
   }
 
-  void _showErrorSnackBar(String message) {
+  void _showSnackBar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
@@ -112,8 +111,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     }
 
     VoidCallback? onLoginPressed = _handleLogin;
+    VoidCallback? onGooglePressed = _handleGoogleLogin;
+
     if (_isLoading) {
       onLoginPressed = null;
+      onGooglePressed = null;
+    }
+
+    IconData visibilityIcon = Icons.visibility_off_outlined;
+    if (!_obscurePassword) {
+      visibilityIcon = Icons.visibility_outlined;
     }
 
     return Scaffold(
@@ -134,7 +141,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     Center(
                       child: Container(
                         padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
+                        decoration: const BoxDecoration(
                           color: AppColors.primaryContainer,
                           shape: BoxShape.circle,
                         ),
@@ -167,55 +174,52 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         color: AppColors.textSecondary,
                       ),
                     ),
-                    const SizedBox(height: 28),
+                    const SizedBox(height: 32),
 
-                    // Demo quick login banner
-                    Container(
-                      padding: const EdgeInsets.all(14),
-                      decoration: BoxDecoration(
-                        color: AppColors.primaryContainer,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: AppColors.primary.withAlpha(40)),
+                    // Continue with Google button
+                    OutlinedButton.icon(
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        side: const BorderSide(color: AppColors.border, width: 1.2),
+                        backgroundColor: Colors.white,
                       ),
-                      child: Column(
-                        children: [
-                          const Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(Icons.bolt_rounded, color: AppColors.primary, size: 18),
-                              SizedBox(width: 6),
-                              Text(
-                                'Quick Demo Testing Mode',
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w700,
-                                  color: AppColors.primary,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 4),
-                          const Text(
-                            'Click below to instantly test the full app with prefilled student ID',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(fontSize: 11, color: AppColors.textSecondary),
-                          ),
-                          const SizedBox(height: 10),
-                          SizedBox(
-                            width: double.infinity,
-                            child: ElevatedButton.icon(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: AppColors.primary,
-                                foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(vertical: 10),
-                              ),
-                              icon: const Icon(Icons.play_arrow_rounded, size: 18),
-                              label: const Text('Enter Demo Mode (1-Tap)'),
-                              onPressed: _isLoading ? null : _handleDemoLogin,
+                      icon: Image.network(
+                        'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Google_%22G%22_logo.svg/120px-Google_%22G%22_logo.svg.png',
+                        height: 20,
+                        width: 20,
+                        errorBuilder: (context, error, stackTrace) {
+                          return const Icon(Icons.g_mobiledata_rounded, size: 24, color: AppColors.primary);
+                        },
+                      ),
+                      label: const Text(
+                        'Continue with Google',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                      onPressed: onGooglePressed,
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Divider OR
+                    const Row(
+                      children: [
+                        Expanded(child: Divider()),
+                        Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 12),
+                          child: Text(
+                            'OR',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: AppColors.textTertiary,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
-                        ],
-                      ),
+                        ),
+                        Expanded(child: Divider()),
+                      ],
                     ),
                     const SizedBox(height: 20),
 
@@ -242,7 +246,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         prefixIcon: const Icon(Icons.lock_outline_rounded, size: 20),
                         suffixIcon: IconButton(
                           icon: Icon(
-                            _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                            visibilityIcon,
                             size: 20,
                           ),
                           onPressed: () {
@@ -260,7 +264,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       onPressed: onLoginPressed,
                       child: buttonChild,
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 24),
 
                     // Sign up switch
                     Row(
