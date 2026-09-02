@@ -8,7 +8,7 @@ import '../../../core/utils/image_compressor.dart';
 class StorageService {
   StorageService();
 
-  // Upload single photo to Cloudinary
+  // Upload single photo
   Future<String> uploadImageToCloudinary({
     required XFile imageFile,
     String folder = 'campus_marketplace',
@@ -37,8 +37,8 @@ class StorageService {
       }
       return secureUrl;
     } else {
-      debugPrint('Cloudinary upload error (${response.statusCode}): ${response.body}');
-      throw Exception('Failed to upload image to Cloudinary');
+      debugPrint('Upload error (${response.statusCode}): ${response.body}');
+      throw Exception('Failed to upload image');
     }
   }
 
@@ -61,7 +61,7 @@ class StorageService {
 
       if (onProgress != null) {
         final double progressValue = (i / totalImages);
-        onProgress(progressValue, 'Uploading photo $imageNumber of $totalImages to Cloudinary...');
+        onProgress(progressValue, 'Uploading photo $imageNumber of $totalImages...');
       }
 
       final uploadedUrl = await uploadImageToCloudinary(
@@ -75,7 +75,7 @@ class StorageService {
     }
 
     if (onProgress != null) {
-      onProgress(1.0, 'All photos uploaded successfully');
+      onProgress(1.0, 'Saving listing details...');
     }
 
     return uploadedUrls;
@@ -83,7 +83,5 @@ class StorageService {
 
   // Delete listing folder (placeholder)
   Future<void> deleteListingFolder(String listingId) async {
-    // Cloudinary direct client deletion requires signed API secret;
-    // Unused assets automatically expire or stay in free tier limits.
   }
 }

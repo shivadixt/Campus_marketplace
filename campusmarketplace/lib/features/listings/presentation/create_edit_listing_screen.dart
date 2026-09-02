@@ -12,20 +12,16 @@ import '../providers/listings_provider.dart';
 
 class CreateEditListingScreen extends ConsumerStatefulWidget {
   final Listing? existingListing;
-
   const CreateEditListingScreen({super.key, this.existingListing});
-
   @override
   ConsumerState<CreateEditListingScreen> createState() => _CreateEditListingScreenState();
 }
-
 class _CreateEditListingScreenState extends ConsumerState<CreateEditListingScreen> {
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
   final _priceController = TextEditingController();
   final _locationController = TextEditingController();
-
   String _selectedCategory = AppConstants.categories.first;
   String _selectedCondition = AppConstants.conditions[2]; // Default 'Good'
 
@@ -34,6 +30,7 @@ class _CreateEditListingScreenState extends ConsumerState<CreateEditListingScree
   final ImagePicker _picker = ImagePicker();
 
   bool _isSaving = false;
+  bool _isSuccess = false;
   double _uploadProgress = 0.0;
   String _progressStatus = '';
 
@@ -79,41 +76,49 @@ class _CreateEditListingScreenState extends ConsumerState<CreateEditListingScree
   Future<void> _pickImages(ImageSource source) async {
     final availableSlots = AppConstants.maxListingImages - totalImageCount;
     if (availableSlots <= 0) {
-      _showSnackBar('Maximum of ${AppConstants.maxListingImages} photos allowed.');
+      _showSnackBar('You can attach up to ${AppConstants.maxListingImages} images.');
       return;
     }
 
     try {
       if (source == ImageSource.camera) {
-        final photo = await _picker.pickImage(source: ImageSource.camera);
+        final photo = await _picker.pickImage(
+          source: ImageSource.camera,
+          imageQuality: AppConstants.imageCompressionQuality,
+          maxWidth: AppConstants.maxImageDimension.toDouble(),
+        );
         if (photo != null) {
           setState(() {
             _newSelectedImages.add(photo);
           });
         }
       } else {
-        final photos = await _picker.pickMultiImage(limit: availableSlots);
+        final photos = await _picker.pickMultiImage(
+          imageQuality: AppConstants.imageCompressionQuality,
+          maxWidth: AppConstants.maxImageDimension.toDouble(),
+          limit: availableSlots,
+        );
         if (photos.isNotEmpty) {
-          final toAdd = photos.take(availableSlots).toList();
           setState(() {
-            _newSelectedImages.addAll(toAdd);
+            final takeCount = photos.length.clamp(0, availableSlots);
+            _newSelectedImages.addAll(photos.take(takeCount));
           });
         }
       }
     } catch (e) {
-      _showSnackBar('Failed to select photo: $e');
+      _showSnackBar('Failed to pick images: $e');
     }
-  }
-
-  void _removeExistingImage(int index) {
-    setState(() {
-      _retainedImageUrls.removeAt(index);
-    });
   }
 
   void _removeNewImage(int index) {
     setState(() {
       _newSelectedImages.removeAt(index);
+    });
+  }
+
+  void _removeExistingImage(int index) {
+    setState(() {
+      _retainedImageUrls.removeAt(index);
     });
   }
 
@@ -145,8 +150,9 @@ class _CreateEditListingScreenState extends ConsumerState<CreateEditListingScree
 
     setState(() {
       _isSaving = true;
+      _isSuccess = false;
       _uploadProgress = 0.0;
-      _progressStatus = 'Preparing images...';
+      _progressStatus = 'Preparing photos...';
     });
 
     final repo = ref.read(listingsRepositoryProvider);
@@ -229,29 +235,29 @@ class _CreateEditListingScreenState extends ConsumerState<CreateEditListingScree
       }
 
       if (mounted) {
-        Navigator.pop(context);
-        String successMessage = 'Listing published to campus!';
+        String successText = 'Listing Published!';
         if (isEditMode) {
-          successMessage = 'Listing updated successfully!';
+          successText = 'Listing Updated!';
         }
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(successMessage),
-            backgroundColor: AppColors.success,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+        setState(() {
+          _isSuccess = true;
+          _progressStatus = successText;
+        });
+
+        await Future.delayed(const Duration(milliseconds: 900));
+
+        if (mounted) {
+          Navigator.pop(context);
+        }
       }
     } catch (e) {
       if (mounted) {
-        _showSnackBar('Failed to save listing: $e');
-      }
-    } finally {
-      if (mounted) {
         setState(() {
           _isSaving = false;
+          _isSuccess = false;
         });
+        _showSnackBar('Failed to save listing: $e');
       }
     }
   }
@@ -276,18 +282,14 @@ class _CreateEditListingScreenState extends ConsumerState<CreateEditListingScree
       submitButtonText = 'Save Changes';
     }
 
-    if (_isSaving) {
-      submitButtonText = 'Uploading & Publishing...';
-    }
-
     VoidCallback? onSaveAction = _saveListing;
     if (_isSaving) {
       onSaveAction = null;
     }
 
-    double? progressIndicatorValue;
+    double? progressValue;
     if (_uploadProgress > 0) {
-      progressIndicatorValue = _uploadProgress;
+      progressValue = _uploadProgress;
     }
 
     return Scaffold(
@@ -296,249 +298,290 @@ class _CreateEditListingScreenState extends ConsumerState<CreateEditListingScree
         title: Text(screenTitle),
       ),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 600),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  // Photos section
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        child: Stack(
+          children: [
+            SingleChildScrollView(
+              padding: const EdgeInsets.all(20),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 600),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      const Text(
-                        'Item Photos',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                      Text(
-                        '$totalImageCount / ${AppConstants.maxListingImages}',
-                        style: const TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 6),
-                  const Text(
-                    'Photos are automatically compressed client-side before upload to preserve data.',
-                    style: TextStyle(fontSize: 12, color: AppColors.textTertiary),
-                  ),
-                  const SizedBox(height: 12),
-
-                  _buildPhotoSelector(),
-                  const SizedBox(height: 24),
-
-                  // Title
-                  TextFormField(
-                    controller: _titleController,
-                    textCapitalization: TextCapitalization.sentences,
-                    validator: (v) {
-                      return Validators.validateRequired(v, 'Title');
-                    },
-                    decoration: const InputDecoration(
-                      labelText: 'Listing Title *',
-                      hintText: 'e.g., Casio FX-991EX Scientific Calculator',
-                      prefixIcon: Icon(Icons.sell_outlined, size: 20),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Price and category
-                  Row(
-                    children: [
-                      Expanded(
-                        flex: 2,
-                        child: TextFormField(
-                          controller: _priceController,
-                          keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                          validator: Validators.validatePrice,
-                          decoration: const InputDecoration(
-                            labelText: 'Price (₹) *',
-                            hintText: '450',
-                            prefixIcon: Icon(Icons.currency_rupee_rounded, size: 20),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        flex: 3,
-                        child: DropdownButtonFormField<String>(
-                          initialValue: _selectedCategory,
-                          items: AppConstants.categories.map((cat) {
-                            return DropdownMenuItem(
-                              value: cat,
-                              child: Row(
-                                children: [
-                                  Icon(AppConstants.getCategoryIcon(cat), size: 16, color: AppColors.primary),
-                                  const SizedBox(width: 8),
-                                  Text(cat, style: const TextStyle(fontSize: 14)),
-                                ],
-                              ),
-                            );
-                          }).toList(),
-                          onChanged: (val) {
-                            if (val != null) {
-                              setState(() {
-                                _selectedCategory = val;
-                              });
-                            }
-                          },
-                          decoration: const InputDecoration(
-                            labelText: 'Category *',
-                            contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Condition
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Item Condition *',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Wrap(
-                        spacing: 8,
-                        children: AppConstants.conditions.map((cond) {
-                          final isSelected = _selectedCondition == cond;
-
-                          Color textColor = AppColors.textPrimary;
-                          FontWeight textWeight = FontWeight.w500;
-                          Color borderColor = AppColors.border;
-
-                          if (isSelected) {
-                            textColor = Colors.white;
-                            textWeight = FontWeight.w600;
-                            borderColor = AppColors.primary;
-                          }
-
-                          return ChoiceChip(
-                            label: Text(cond),
-                            selected: isSelected,
-                            selectedColor: AppColors.primary,
-                            backgroundColor: AppColors.surface,
-                            labelStyle: TextStyle(
-                              color: textColor,
-                              fontWeight: textWeight,
-                            ),
-                            side: BorderSide(color: borderColor),
-                            onSelected: (selected) {
-                              if (selected) {
-                                setState(() {
-                                  _selectedCondition = cond;
-                                });
-                              }
-                            },
-                          );
-                        }).toList(),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Location
-                  TextFormField(
-                    controller: _locationController,
-                    textCapitalization: TextCapitalization.words,
-                    validator: (v) {
-                      return Validators.validateRequired(v, 'Campus Location');
-                    },
-                    decoration: const InputDecoration(
-                      labelText: 'Location on Campus *',
-                      hintText: 'e.g., Hostel Block B / CS Dept',
-                      prefixIcon: Icon(Icons.location_on_outlined, size: 20),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Description
-                  TextFormField(
-                    controller: _descriptionController,
-                    maxLines: 4,
-                    validator: (v) {
-                      return Validators.validateRequired(v, 'Description');
-                    },
-                    decoration: const InputDecoration(
-                      labelText: 'Description *',
-                      hintText: 'Mention details like age, condition notes, pickup spot...',
-                      alignLabelWithHint: true,
-                    ),
-                  ),
-                  const SizedBox(height: 28),
-
-                  // Upload progress
-                  if (_isSaving) ...[
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: AppColors.primaryContainer,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: AppColors.primaryLight.withAlpha(50)),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                      // Photos section
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                _progressStatus,
-                                style: const TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w600,
-                                  color: AppColors.primary,
-                                ),
-                              ),
-                              Text(
-                                '${(_uploadProgress * 100).toInt()}%',
-                                style: const TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w700,
-                                  color: AppColors.primary,
-                                ),
-                              ),
-                            ],
+                          const Text(
+                            'Item Photos',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.textPrimary,
+                            ),
                           ),
-                          const SizedBox(height: 8),
-                          LinearProgressIndicator(
-                            value: progressIndicatorValue,
-                            backgroundColor: Colors.white,
-                            color: AppColors.primary,
-                            borderRadius: BorderRadius.circular(4),
+                          Text(
+                            '$totalImageCount / ${AppConstants.maxListingImages}',
+                            style: const TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.textSecondary,
+                            ),
                           ),
                         ],
                       ),
-                    ),
-                    const SizedBox(height: 20),
-                  ],
+                      const SizedBox(height: 6),
+                      const Text(
+                        'Photos are automatically compressed client-side before upload to preserve data.',
+                        style: TextStyle(fontSize: 12, color: AppColors.textTertiary),
+                      ),
+                      const SizedBox(height: 12),
 
-                  // Submit button
-                  ElevatedButton(
-                    onPressed: onSaveAction,
-                    child: Text(submitButtonText),
+                      _buildPhotoSelector(),
+                      const SizedBox(height: 24),
+
+                      // Title
+                      TextFormField(
+                        controller: _titleController,
+                        textCapitalization: TextCapitalization.sentences,
+                        validator: (v) {
+                          return Validators.validateRequired(v, 'Title');
+                        },
+                        decoration: const InputDecoration(
+                          labelText: 'Listing Title *',
+                          hintText: 'e.g., Casio FX-991EX Scientific Calculator',
+                          prefixIcon: Icon(Icons.sell_outlined, size: 20),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Price and category
+                      Row(
+                        children: [
+                          Expanded(
+                            flex: 2,
+                            child: TextFormField(
+                              controller: _priceController,
+                              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                              validator: Validators.validatePrice,
+                              decoration: const InputDecoration(
+                                labelText: 'Price (₹) *',
+                                hintText: '450',
+                                prefixIcon: Icon(Icons.currency_rupee_rounded, size: 20),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            flex: 3,
+                            child: DropdownButtonFormField<String>(
+                              initialValue: _selectedCategory,
+                              items: AppConstants.categories.map((cat) {
+                                return DropdownMenuItem(
+                                  value: cat,
+                                  child: Row(
+                                    children: [
+                                      Icon(AppConstants.getCategoryIcon(cat), size: 16, color: AppColors.primary),
+                                      const SizedBox(width: 8),
+                                      Text(cat, style: const TextStyle(fontSize: 14)),
+                                    ],
+                                  ),
+                                );
+                              }).toList(),
+                              onChanged: (val) {
+                                if (val != null) {
+                                  setState(() {
+                                    _selectedCategory = val;
+                                  });
+                                }
+                              },
+                              decoration: const InputDecoration(
+                                labelText: 'Category *',
+                                contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Condition
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Item Condition *',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Wrap(
+                            spacing: 8,
+                            children: AppConstants.conditions.map((cond) {
+                              final isSelected = _selectedCondition == cond;
+
+                              Color textColor = AppColors.textPrimary;
+                              FontWeight textWeight = FontWeight.w500;
+                              Color borderColor = AppColors.border;
+
+                              if (isSelected) {
+                                textColor = Colors.white;
+                                textWeight = FontWeight.w600;
+                                borderColor = AppColors.primary;
+                              }
+
+                              return ChoiceChip(
+                                label: Text(
+                                  cond,
+                                  style: TextStyle(
+                                    color: textColor,
+                                    fontWeight: textWeight,
+                                    fontSize: 13,
+                                  ),
+                                ),
+                                selected: isSelected,
+                                selectedColor: AppColors.primary,
+                                backgroundColor: AppColors.surface,
+                                side: BorderSide(color: borderColor),
+                                onSelected: (selected) {
+                                  if (selected) {
+                                    setState(() {
+                                      _selectedCondition = cond;
+                                    });
+                                  }
+                                },
+                              );
+                            }).toList(),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Location
+                      TextFormField(
+                        controller: _locationController,
+                        textCapitalization: TextCapitalization.words,
+                        validator: (v) {
+                          return Validators.validateRequired(v, 'Location');
+                        },
+                        decoration: const InputDecoration(
+                          labelText: 'Campus Location / Meetup Spot *',
+                          hintText: 'e.g., Hostel Block A, Central Library, Dept Cafeteria',
+                          prefixIcon: Icon(Icons.location_on_outlined, size: 20),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Description
+                      TextFormField(
+                        controller: _descriptionController,
+                        maxLines: 4,
+                        textCapitalization: TextCapitalization.sentences,
+                        validator: (v) {
+                          return Validators.validateRequired(v, 'Description');
+                        },
+                        decoration: const InputDecoration(
+                          labelText: 'Description *',
+                          hintText: 'Describe condition, usage duration, included accessories...',
+                          alignLabelWithHint: true,
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+
+                      // Submit button
+                      ElevatedButton(
+                        onPressed: onSaveAction,
+                        child: Text(submitButtonText),
+                      ),
+                    ],
                   ),
-                ],
+                ),
               ),
             ),
-          ),
+
+            // Fullscreen Progress / Success Overlay
+            if (_isSaving)
+              Container(
+                color: Colors.black54,
+                alignment: Alignment.center,
+                child: Container(
+                  width: 250,
+                  padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 24),
+                  decoration: BoxDecoration(
+                    color: AppColors.surface,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withAlpha(50),
+                        blurRadius: 20,
+                        offset: const Offset(0, 8),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (_isSuccess) ...[
+                        const Icon(
+                          Icons.check_circle_rounded,
+                          size: 60,
+                          color: AppColors.success,
+                        ),
+                        const SizedBox(height: 14),
+                        Text(
+                          _progressStatus,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                      ] else ...[
+                        SizedBox(
+                          height: 60,
+                          width: 60,
+                          child: Stack(
+                            alignment: Alignment.center,
+                            children: [
+                              CircularProgressIndicator(
+                                value: progressValue,
+                                strokeWidth: 4.5,
+                                color: AppColors.primary,
+                                backgroundColor: AppColors.primaryContainer,
+                              ),
+                              if (_uploadProgress > 0)
+                                Text(
+                                  '${(_uploadProgress * 100).toInt()}%',
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w700,
+                                    color: AppColors.primary,
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          _progressStatus,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+          ],
         ),
       ),
     );
