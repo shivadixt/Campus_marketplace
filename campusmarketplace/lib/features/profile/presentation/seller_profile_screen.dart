@@ -155,13 +155,17 @@ class SellerProfileScreen extends ConsumerWidget {
                     );
                   }
 
+                  final screenWidth = MediaQuery.sizeOf(context).width;
+                  final crossAxisCount = screenWidth >= 900 ? 4 : (screenWidth >= 600 ? 3 : 2);
+                  final childAspectRatio = screenWidth >= 600 ? 0.75 : 0.69;
+
                   return GridView.builder(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
                     padding: const EdgeInsets.all(16),
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      childAspectRatio: 0.78,
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: crossAxisCount,
+                      childAspectRatio: childAspectRatio,
                       crossAxisSpacing: 12,
                       mainAxisSpacing: 12,
                     ),

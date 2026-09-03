@@ -111,18 +111,19 @@ class ListingCard extends StatelessWidget {
               // Details
               Expanded(
                 child: Padding(
-                  padding: const EdgeInsets.all(10),
+                  padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(
                             Formatters.formatPrice(listing.price),
                             style: const TextStyle(
-                              fontSize: 16,
+                              fontSize: 15,
                               fontWeight: FontWeight.w800,
                               color: AppColors.primary,
                               letterSpacing: -0.5,
@@ -137,19 +138,19 @@ class ListingCard extends StatelessWidget {
                               fontSize: 13,
                               fontWeight: FontWeight.w700,
                               color: AppColors.textPrimary,
-                              height: 1.25,
+                              height: 1.2,
                             ),
                           ),
                           if (listing.description.isNotEmpty) ...[
-                            const SizedBox(height: 3),
+                            const SizedBox(height: 2),
                             Text(
                               listing.description,
-                              maxLines: 2,
+                              maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: const TextStyle(
                                 fontSize: 11,
                                 color: AppColors.textSecondary,
-                                height: 1.25,
+                                height: 1.2,
                               ),
                             ),
                           ],

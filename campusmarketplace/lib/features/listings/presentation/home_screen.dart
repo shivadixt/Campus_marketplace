@@ -170,6 +170,10 @@ class HomeScreen extends ConsumerWidget {
                 );
               }
 
+              final screenWidth = MediaQuery.sizeOf(context).width;
+              final crossAxisCount = screenWidth >= 900 ? 4 : (screenWidth >= 600 ? 3 : 2);
+              final childAspectRatio = screenWidth >= 600 ? 0.75 : 0.69;
+
               return RefreshIndicator(
                 color: AppColors.primary,
                 onRefresh: () async {
@@ -177,9 +181,9 @@ class HomeScreen extends ConsumerWidget {
                 },
                 child: GridView.builder(
                   padding: const EdgeInsets.fromLTRB(16, 8, 16, 88),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    childAspectRatio: 0.78,
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: crossAxisCount,
+                    childAspectRatio: childAspectRatio,
                     crossAxisSpacing: 12,
                     mainAxisSpacing: 12,
                   ),
