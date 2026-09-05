@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../core/constants/app_colors.dart';
-import '../../../core/utils/formatters.dart';
-import '../../../models/listing_model.dart';
-import '../../auth/providers/auth_provider.dart';
-import '../../listings/presentation/category_browse_screen.dart';
-import '../../listings/presentation/my_listings_screen.dart';
-import '../../listings/providers/listings_provider.dart';
-import 'edit_profile_dialog.dart';
+import '../core/constants/app_colors.dart';
+import '../core/utils/formatters.dart';
+import '../models/listing_model.dart';
+import '../models/user_profile.dart';
+import '../providers/auth_provider.dart';
+import '../providers/listings_provider.dart';
+import 'my_listings_screen.dart';
 
 class MyProfileScreen extends ConsumerWidget {
   const MyProfileScreen({super.key});
@@ -168,10 +167,7 @@ class MyProfileScreen extends ConsumerWidget {
                           label: const Text('Edit Profile'),
                           onPressed: () {
                             if (profile != null) {
-                              showDialog(
-                                context: context,
-                                builder: (_) => EditProfileDialog(userProfile: profile),
-                              );
+                              _showEditProfileModal(context, ref, profile);
                             }
                           },
                         ),
@@ -263,19 +259,6 @@ class MyProfileScreen extends ConsumerWidget {
                             );
                           },
                         ),
-                        const Divider(),
-                        ListTile(
-                          leading: const Icon(Icons.category_outlined, color: AppColors.primary),
-                          title: const Text('Browse Categories', style: TextStyle(fontWeight: FontWeight.w600)),
-                          subtitle: const Text('Books, Electronics, Calculators...'),
-                          trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 14),
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (_) => const CategoryBrowseScreen()),
-                            );
-                          },
-                        ),
                       ],
                     ),
                   ),
@@ -344,6 +327,100 @@ class MyProfileScreen extends ConsumerWidget {
           },
         ),
       ),
+    );
+  }
+
+  void _showEditProfileModal(BuildContext context, WidgetRef ref, UserProfile profile) {
+    final nameController = TextEditingController(text: profile.name);
+    final phoneController = TextEditingController(text: profile.phone);
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) {
+        return Padding(
+          padding: EdgeInsets.fromLTRB(20, 20, 20, MediaQuery.of(ctx).viewInsets.bottom + 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Edit Profile',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close_rounded, size: 20),
+                    onPressed: () => Navigator.pop(ctx),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: nameController,
+                decoration: const InputDecoration(
+                  labelText: 'Full Name',
+                  prefixIcon: Icon(Icons.person_outline, size: 20),
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: phoneController,
+                keyboardType: TextInputType.phone,
+                decoration: const InputDecoration(
+                  labelText: 'Phone Number (for WhatsApp / Calls)',
+                  prefixIcon: Icon(Icons.phone_outlined, size: 20),
+                ),
+              ),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () async {
+                    final name = nameController.text.trim();
+                    final phone = phoneController.text.trim();
+                    if (name.isEmpty) return;
+                    Navigator.pop(ctx);
+                    try {
+                      await ref.read(authRepositoryProvider).updateProfile(
+                        userId: profile.id,
+                        name: name,
+                        phone: phone,
+                      );
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Profile updated successfully!'),
+                            backgroundColor: AppColors.success,
+                            behavior: SnackBarBehavior.floating,
+                          ),
+                        );
+                      }
+                    } catch (e) {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Failed to update: $e'),
+                            backgroundColor: AppColors.error,
+                            behavior: SnackBarBehavior.floating,
+                          ),
+                        );
+                      }
+                    }
+                  },
+                  child: const Text('Save Changes'),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 

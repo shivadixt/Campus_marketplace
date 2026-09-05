@@ -1,15 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../core/constants/app_colors.dart';
-import '../../../core/constants/app_constants.dart';
-import '../../auth/providers/auth_provider.dart';
-import '../../profile/presentation/my_profile_screen.dart';
+import '../core/constants/app_colors.dart';
+import '../core/constants/app_constants.dart';
+import '../providers/auth_provider.dart';
 import '../providers/listings_provider.dart';
 import '../providers/search_filter_provider.dart';
-import 'category_browse_screen.dart';
 import 'create_edit_listing_screen.dart';
 import 'listing_detail_screen.dart';
 import 'my_listings_screen.dart';
+import 'my_profile_screen.dart';
 import 'widgets/category_chip_bar.dart';
 import 'widgets/empty_state_view.dart';
 import 'widgets/listing_card.dart';
@@ -77,16 +76,6 @@ class HomeScreen extends ConsumerWidget {
           ],
         ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.category_outlined),
-            tooltip: 'Browse Categories',
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const CategoryBrowseScreen()),
-              );
-            },
-          ),
           IconButton(
             icon: const Icon(Icons.inventory_2_outlined),
             tooltip: 'My Listings',

@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../models/listing_model.dart';
+import '../models/listing_model.dart';
 import 'listings_provider.dart';
 
 // --- Filter State Providers ---

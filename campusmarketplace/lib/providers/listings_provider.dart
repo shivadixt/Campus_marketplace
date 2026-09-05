@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../models/listing_model.dart';
-import '../data/listings_repository.dart';
-import '../data/storage_service.dart';
+import '../models/listing_model.dart';
+import '../services/listings_repository.dart';
+import '../services/storage_service.dart';
 
 final storageServiceProvider = Provider<StorageService>((ref) {
   return StorageService();

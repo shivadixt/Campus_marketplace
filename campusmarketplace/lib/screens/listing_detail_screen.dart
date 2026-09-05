@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../core/constants/app_colors.dart';
-import '../../../core/constants/app_constants.dart';
-import '../../../core/utils/contact_helper.dart';
-import '../../../core/utils/formatters.dart';
-import '../../../models/listing_model.dart';
-import '../../auth/providers/auth_provider.dart';
-import '../../profile/presentation/seller_profile_screen.dart';
+import '../core/constants/app_colors.dart';
+import '../core/constants/app_constants.dart';
+import '../core/utils/contact_helper.dart';
+import '../core/utils/formatters.dart';
+import '../models/listing_model.dart';
+import '../providers/auth_provider.dart';
 import '../providers/listings_provider.dart';
 import 'create_edit_listing_screen.dart';
 import 'widgets/condition_badge.dart';
@@ -315,77 +314,59 @@ class ListingDetailScreen extends ConsumerWidget {
                       ),
                     ),
                     const SizedBox(height: 12),
-                    Material(
-                      color: AppColors.surface,
-                      borderRadius: BorderRadius.circular(12),
-                      child: InkWell(
+                    Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: AppColors.surface,
                         borderRadius: BorderRadius.circular(12),
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => SellerProfileScreen(
-                                sellerId: currentListing.sellerId,
-                                initialSellerName: currentListing.sellerName,
-                              ),
-                            ),
-                          );
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.all(14),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: AppColors.border),
+                        border: Border.all(color: AppColors.border),
+                      ),
+                      child: Row(
+                        children: [
+                          CircleAvatar(
+                            radius: 24,
+                            backgroundColor: AppColors.primaryContainer,
+                            backgroundImage: currentListing.sellerPhotoUrl.isNotEmpty
+                                ? NetworkImage(currentListing.sellerPhotoUrl)
+                                : null,
+                            child: currentListing.sellerPhotoUrl.isEmpty
+                                ? Text(
+                                    currentListing.sellerName.isNotEmpty
+                                        ? currentListing.sellerName[0].toUpperCase()
+                                        : 'S',
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.w700,
+                                      color: AppColors.primary,
+                                      fontSize: 18,
+                                    ),
+                                  )
+                                : null,
                           ),
-                          child: Row(
-                            children: [
-                              CircleAvatar(
-                                radius: 24,
-                                backgroundColor: AppColors.primaryContainer,
-                                backgroundImage: currentListing.sellerPhotoUrl.isNotEmpty
-                                    ? NetworkImage(currentListing.sellerPhotoUrl)
-                                    : null,
-                                child: currentListing.sellerPhotoUrl.isEmpty
-                                    ? Text(
-                                        currentListing.sellerName.isNotEmpty
-                                            ? currentListing.sellerName[0].toUpperCase()
-                                            : 'S',
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.w700,
-                                          color: AppColors.primary,
-                                          fontSize: 18,
-                                        ),
-                                      )
-                                    : null,
-                              ),
-                              const SizedBox(width: 14),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      currentListing.sellerName,
-                                      style: const TextStyle(
-                                        fontSize: 15,
-                                        fontWeight: FontWeight.w700,
-                                        color: AppColors.textPrimary,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 2),
-                                    const Text(
-                                      'Campus Student • Tap to view profile & listings',
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: AppColors.textSecondary,
-                                      ),
-                                    ),
-                                  ],
+                          const SizedBox(width: 14),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  currentListing.sellerName,
+                                  style: const TextStyle(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w700,
+                                    color: AppColors.textPrimary,
+                                  ),
                                 ),
-                              ),
-                              const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: AppColors.textTertiary),
-                            ],
+                                const SizedBox(height: 2),
+                                Text(
+                                  'Campus Student • ${currentListing.location}',
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    color: AppColors.textSecondary,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
+                        ],
                       ),
                     ),
                     const SizedBox(height: 32),

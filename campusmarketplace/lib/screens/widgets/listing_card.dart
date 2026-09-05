@@ -1,8 +1,8 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import '../../../../core/constants/app_colors.dart';
-import '../../../../core/utils/formatters.dart';
-import '../../../../models/listing_model.dart';
+import '../../core/constants/app_colors.dart';
+import '../../core/utils/formatters.dart';
+import '../../models/listing_model.dart';
 import 'condition_badge.dart';
 
 class ListingCard extends StatelessWidget {

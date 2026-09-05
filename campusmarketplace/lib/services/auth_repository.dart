@@ -4,8 +4,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:image_picker/image_picker.dart';
-import '../../../models/user_profile.dart';
-import '../../listings/data/storage_service.dart';
+import '../models/user_profile.dart';
+import 'storage_service.dart';
 
 class AuthRepository {
   final FirebaseAuth _auth;
