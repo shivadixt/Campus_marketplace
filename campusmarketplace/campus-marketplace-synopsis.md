@@ -1,65 +1,74 @@
-# Campus Marketplace --- Project Synopsis
+# Campus Marketplace — Project Synopsis
 
-## Overview
+## 1. Project Title
+**Campus Marketplace** — A Mobile App for College Students to Buy & Sell Pre-owned Items
 
-Campus Marketplace is a mobile application built with Flutter that
-allows students to buy and sell used items --- books, electronics,
-furniture, calculators, notes, and more --- within their own college
-community.
+---
 
-## Problem Statement
+## 2. Overview
+Campus Marketplace is a simple and fast cross-platform mobile application built with **Flutter**. It allows college students to buy and sell second-hand items—such as books, electronics, cycle, calculators, and notes—directly with peers within their college.
 
-Students often have unused items they'd like to sell, while other
-students look for the same items at lower prices. There is no simple,
-campus-focused platform for this. Campus Marketplace solves that by
-giving students one app to list, browse, search, and buy items from
-peers.
+---
 
-## Objective
+## 3. Problem Statement
+Students often have used textbooks, calculators, or gadgets they no longer need after a semester, while other students look to buy those same items at lower prices. Existing platforms like OLX are too broad and involve unknown people or shipping hassles. Campus Marketplace solves this by offering a secure, campus-only trading platform.
 
-To build a full-stack mobile application where students can create
-accounts, list products with images, browse/search/filter listings,
-view seller details, and manage their own listings --- demonstrating a
-complete real-world app rather than a basic CRUD project.
+---
 
-## Key Features
+## 4. Key Features
 
-- User registration & login (JWT-based authentication)
-- Create, edit, delete product listings
-- Upload product images (camera/gallery)
-- Browse and search products
-- Filter by category, price, and condition
-- Product details with seller information
-- Contact seller (call/email/WhatsApp)
-- Mark items as sold
-- User dashboard and profile management
+- **User Authentication**: Simple signup, login, and profile management with email and password.
+- **Product Listings**: Upload photos, title, price, description, condition, and category.
+- **Search & Filters**: Search products by name and filter by categories (Books, Electronics, Stationery, etc.).
+- **Direct Contact**: Contact sellers instantly via **WhatsApp** or **Direct Phone Call**.
+- **Listing Management**: Mark items as "Active" or "Sold", edit details, or delete items.
 
-## Technology Stack
+---
 
-| Layer | Technology |
-|---|---|
-| Mobile App | Flutter (Dart) |
-| State Management | Riverpod / Provider |
-| Navigation | go_router |
-| API Client | Dio |
-| Backend | Node.js + Express.js |
-| Database | MongoDB (Mongoose) |
-| Authentication | JWT + bcrypt |
-| Image Storage | Cloudinary |
-| Hosting | MongoDB Atlas, Render/Railway |
-| Version Control | Git & GitHub |
+## 5. Technology Stack
 
-## System Architecture
+| Component | Technology | Purpose |
+|---|---|---|
+| **Frontend App** | Flutter (Dart) | Cross-platform mobile app (Android & iOS) |
+| **State Management** | Riverpod | Easy state and data management |
+| **Authentication** | Firebase Auth | User login and registration |
+| **Database** | Cloud Firestore | Real-time database for products and users |
+| **Image Storage** | Cloudinary | Fast photo upload and cloud storage |
+| **Direct Contact** | URL Launcher | Open WhatsApp chat and phone dialer |
+
+---
+
+## 6. App Architecture Flow
 
 ```text
-Flutter App  →  REST API (Node.js + Express)  →  MongoDB
-                          ↓
-                     Cloudinary (images)
+Student (Mobile App)
+       │
+       ├─► Firebase Auth   ── (User Login / Signup)
+       ├─► Cloud Firestore ── (Save & Fetch Product Listings)
+       ├─► Cloudinary      ── (Upload & Store Item Photos)
+       └─► WhatsApp / Call ── (Direct Chat with Seller)
 ```
 
-## Expected Outcome
+---
 
-A working cross-platform (Android/iOS) marketplace app with secure
-authentication, image-based listings, search & filters, and full CRUD
-functionality --- suitable as a resume/portfolio project demonstrating
-full-stack mobile development skills.
+## 7. Folder Structure
+
+```text
+lib/
+├── main.dart
+├── backend/
+│   ├── constants/       # App settings & categories
+│   ├── models/          # Data models (Listing, UserProfile)
+│   ├── providers/       # State providers (Auth, Listings, Search)
+│   ├── services/        # Firebase & Cloudinary upload services
+│   └── utils/           # Formatters & input validation
+└── frontend/
+    ├── screens/         # Login, Signup, Home, Product Details, Profile
+    ├── widgets/         # Cards, Search Bar, Filter Chips
+    └── theme/           # App colors and styles
+```
+
+---
+
+## 8. Expected Outcome
+A clean, easy-to-use mobile app that helps college students save money, trade easily on campus, and promote recycling of student essentials.
