@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../core/constants/app_colors.dart';
-import '../core/utils/formatters.dart';
-import '../models/listing_model.dart';
-import '../models/user_profile.dart';
-import '../providers/auth_provider.dart';
-import '../providers/listings_provider.dart';
+import '../theme/app_colors.dart';
+import '../../backend/utils/formatters.dart';
+import '../../backend/models/listing_model.dart';
+import '../../backend/models/user_profile.dart';
+import '../../backend/providers/auth_provider.dart';
+import '../../backend/providers/listings_provider.dart';
 import 'my_listings_screen.dart';
 
 class MyProfileScreen extends ConsumerWidget {

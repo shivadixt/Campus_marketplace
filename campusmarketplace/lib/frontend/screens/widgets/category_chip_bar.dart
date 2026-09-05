@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../core/constants/app_colors.dart';
-import '../../core/constants/app_constants.dart';
-import '../../providers/search_filter_provider.dart';
+import '../../theme/app_colors.dart';
+import '../../../backend/constants/app_constants.dart';
+import '../../../backend/providers/search_filter_provider.dart';
 
 class CategoryChipBar extends ConsumerWidget {
   const CategoryChipBar({super.key});

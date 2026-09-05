@@ -1,8 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:campus_marketplace/core/utils/formatters.dart';
-import 'package:campus_marketplace/core/utils/validators.dart';
-import 'package:campus_marketplace/models/listing_model.dart';
-import 'package:campus_marketplace/models/user_profile.dart';
+import 'package:campus_marketplace/backend/utils/formatters.dart';
+import 'package:campus_marketplace/backend/utils/validators.dart';
+import 'package:campus_marketplace/backend/models/listing_model.dart';
+import 'package:campus_marketplace/backend/models/user_profile.dart';
 
 void main() {
   group('Validators Unit Tests', () {

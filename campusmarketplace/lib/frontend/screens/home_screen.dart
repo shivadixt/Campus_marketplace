@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../core/constants/app_colors.dart';
-import '../core/constants/app_constants.dart';
-import '../providers/auth_provider.dart';
-import '../providers/listings_provider.dart';
-import '../providers/search_filter_provider.dart';
+import '../../backend/constants/app_constants.dart';
+import '../../backend/providers/auth_provider.dart';
+import '../../backend/providers/listings_provider.dart';
+import '../../backend/providers/search_filter_provider.dart';
+import '../theme/app_colors.dart';
 import 'create_edit_listing_screen.dart';
 import 'listing_detail_screen.dart';
 import 'my_listings_screen.dart';

@@ -2,8 +2,8 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
-import '../core/constants/app_constants.dart';
-import '../core/utils/image_compressor.dart';
+import '../constants/app_constants.dart';
+import '../utils/image_compressor.dart';
 
 class StorageService {
   StorageService();

@@ -1,6 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import '../../core/constants/app_colors.dart';
+import '../../theme/app_colors.dart';
 
 class ImageCarousel extends StatefulWidget {
   final List<String> imageUrls;

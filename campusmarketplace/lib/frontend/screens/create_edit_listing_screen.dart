@@ -3,12 +3,12 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
-import '../core/constants/app_colors.dart';
-import '../core/constants/app_constants.dart';
-import '../core/utils/validators.dart';
-import '../models/listing_model.dart';
-import '../providers/auth_provider.dart';
-import '../providers/listings_provider.dart';
+import '../theme/app_colors.dart';
+import '../../backend/constants/app_constants.dart';
+import '../../backend/utils/validators.dart';
+import '../../backend/models/listing_model.dart';
+import '../../backend/providers/auth_provider.dart';
+import '../../backend/providers/listings_provider.dart';
 
 class CreateEditListingScreen extends ConsumerStatefulWidget {
   final Listing? existingListing;
